@@ -1,5 +1,6 @@
 package com.movil.hsaldarriaga.weather;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -27,43 +28,53 @@ import java.util.List;
  */
 public class WeatherLector {
 
-    public WeatherLector(Context c)
+    public WeatherLector(Activity c)
     {
         this.c = c;
         URLName = "http://api.openweathermap.org/data/2.5/forecast/daily?q=Barranquilla&units=metric&cnt=6";
     }
 
-    public boolean Connect() {
+    public void Connect(final FinishCallBack callback) {
         if (hasInternet()) {
-            String content = "";
-            HttpURLConnection con = null;
-            try {
-                URL rute = new URL(URLName);
-                con = (HttpURLConnection) rute.openConnection();
-                InputStream in = new BufferedInputStream(con.getInputStream());
-                BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-                String line = reader.readLine();
-                while (line != null) {
-                    content += line;
-                    line = reader.readLine();
+            Thread  t = new Thread( new Runnable() {
+                @Override
+                public void run() {
+                    String content = "";
+                    resultado = false;
+                    HttpURLConnection con = null;
+                    try {
+                        URL rute = new URL(URLName);
+                        con = (HttpURLConnection) rute.openConnection();
+                        InputStream in = new BufferedInputStream(con.getInputStream());
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+                        String line = reader.readLine();
+                        while (line != null) {
+                            content += line;
+                            line = reader.readLine();
+                        }
+                        reader.close();
+                        obj = new JSONObject(content);
+                        resultado = true;
+
+                    } catch (IOException e) {
+                    } catch (JSONException e) {
+                    } finally {
+                        if (con != null)
+                            con.disconnect();
+                        c.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                callback.OnFinish(resultado);
+                            }
+                        });
+                    }
                 }
-                reader.close();
-                obj = new JSONObject(content);
-                return true;
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            } finally {
-                if (con != null)
-                    con.disconnect();
-            }
+            });
+            t.start();
         } else {
             Toast.makeText(c, "There isn't Internet Connection,", Toast.LENGTH_LONG).show();
+            callback.OnFinish(false);
         }
-        return false;
     }
 
     private boolean hasInternet() {
@@ -79,8 +90,9 @@ public class WeatherLector {
         {
             try {
                 JSONArray list = obj.getJSONArray("list");
-                JSONObject temp = list.getJSONObject(0);
+                JSONObject temp = list.getJSONObject(0).getJSONObject("temp");
                 Weather w = new Weather(temp.getDouble("day"), temp.getDouble("min"), temp.getDouble("max"), temp.getDouble("night"), temp.getDouble("eve"), temp.getDouble("morn"));
+                return w;
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -98,10 +110,11 @@ public class WeatherLector {
                 JSONArray list = obj.getJSONArray("list");
                 for (int i = 1; i < list.length(); i++)
                 {
-                    JSONObject temp = list.getJSONObject(i);
+                    JSONObject temp = list.getJSONObject(i).getJSONObject("temp");
                     Weather w = new Weather(temp.getDouble("day"), temp.getDouble("min"), temp.getDouble("max"), temp.getDouble("night"), temp.getDouble("eve"), temp.getDouble("morn"));
                     lista.add(w);
                 }
+                return lista;
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -112,5 +125,6 @@ public class WeatherLector {
 
     public final String URLName;
     public JSONObject obj = null;
-    private final Context c;
+    private boolean resultado = false;
+    private final Activity c;
 }

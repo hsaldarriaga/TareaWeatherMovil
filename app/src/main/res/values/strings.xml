@@ -4,5 +4,12 @@
     <string name="app_name">Weather</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="TempHeader">Temperatura de Hoy</string>
+    <string name="DayLabel">Dia:</string>
+    <string name="minlabel">Min:</string>
+    <string name="maxlabel">Max:</string>
+    <string name="tomorrowlabel">Mañana:</string>
+    <string name="Evenlabel">Tarde:</string>
+    <string name="nightlabel">Noche:</string>
 
 </resources>

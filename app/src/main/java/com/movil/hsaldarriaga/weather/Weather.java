@@ -4,7 +4,7 @@ package com.movil.hsaldarriaga.weather;
  * Created by Administrador on 23/04/2015.
  */
 public class Weather {
-    public double day, min, max, night, eve, morn;
+    private double day, min, max, night, eve, morn;
 
     public Weather(double day, double min, double max, double night, double eve, double morn) {
         this.day = day;
